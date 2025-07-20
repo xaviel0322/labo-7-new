@@ -1,0 +1,74 @@
+---------> PRATICA 1 <---------
+
+
+# 1. Se instala el servicio:
+ 
+dnf install -y nfs-utils
+
+# 2. Habilitar todos los servicios:
+
+systemctl enable rpcbind
+systemctl enable nfs-server
+systemctl start rpcbind
+systemctl start nfs-server
+
+# 3. Creamos la carpeta a compartir:
+mkdir /srv/os3
+
+# 4. Asignamos los servicios necesarios:
+
+chown nobody /srv/os3
+chmod a+w /srv/os3
+
+# 5. Editamos el archivo en /etc/exports:
+
+vi /etc/exports
+
+# 6. Añadimos la siguiente línea:
+
+/srv/os3 *
+
+# 7. Reiniciamos el servicio:
+
+systemctl restart nfs-server
+
+# 8. Nos aseguramos que SELinux no interfiera:
+
+getenforce
+
+# Si el resultado no es "Permissive", lo cambiamos con:
+
+setenforce Permissive
+
+# 9. Hacemos las configuraciones del firewall necesarias:
+
+firewall-cmd --permanent --add-service=mountd
+firewall-cmd --permanent --add-service=rpc-bind
+firewall-cmd --permanent --add-service=nfs
+firewall-cmd --reload
+
+
+---------> EN LA MAQUINA CLIENTE <---------
+
+# 1. Instalamos los mismos servicios
+
+dnf install nfs-utils -y
+
+# 2. Verificamos que el cliente tenga acceso:
+
+showmount -e 192.168.0.20
+
+# 3. Creamos la carpeta donde se van recibir los archivos:
+
+mount -t nfs 192.168.0.20:/srv/nfs /carpeta-nfs
+
+# df --- Chequeamos la creación
+
+
+# 4. Configuramos el automount
+
+sudo nano /etc/fstab
+
+# Línea a agregar en /etc/fstab:
+
+192.168.0.20:/srv/nfs/os3 /mnt nfs defaults 0 0
