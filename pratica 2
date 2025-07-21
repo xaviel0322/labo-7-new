@@ -1,0 +1,65 @@
+# 1. Instalar el samba
+
+dnf -y install samba
+
+# 2. Habilitamos los servicios
+
+systemctl enable smb
+systemctl enable nmb
+
+# 3. Creamos un usuario que usaremos para abrir las carpetas.
+
+groupadd usuariosamba
+
+useradd Adrian -G usuariosamba
+
+smbpasswd -a Adrian adrian123
+
+# --> chequeamos que el getenforce este en permisivo
+
+getenforce
+
+setenforce Permissive
+
+# 4. Activamos los servicios del firewall
+
+firewall-cmd --add-service=samba --permanent
+firewall-cmd --reload
+firewall-cmd --list-all
+
+# 5. Nos dirigimos al directorio de samba y haremos en el archivo de configuración.
+
+cd /etc/samba/
+
+# dentro de la ruta creamos nuestro directorio:
+
+mkdir adrian
+
+touch adrian.txt{1..100}
+
+# a estos archivos le damos todos los permisos para que se puede acceder a ellos:
+
+chmod a+w adrian.txt{1..100}
+
+# -> hacemos una copia
+
+
+# 6. editamos el archivo
+
+nano smb.conf
+
+# Contenido dentro del archivo:
+map to guest = bad user
+
+[public]
+  comment = directorio publico
+  path = /srv/samba/adrian
+  browseable = yes
+  writeable = yes
+  guest ok = yes
+  read only = no
+
+# 7. Reiniciamos los servicios
+
+systemctl restart smb
+systemctl restart nmb
